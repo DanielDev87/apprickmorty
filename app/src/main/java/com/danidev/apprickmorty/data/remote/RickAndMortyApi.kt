@@ -2,10 +2,15 @@ package com.danidev.apprickmorty.data.remote
 
 import com.danidev.apprickmorty.data.model.CharacterResponse
 import com.danidev.apprickmorty.data.model.RickCharacter
+import retrofit2.converter.gson.GsonConverterFactory
+import retrofit2.Retrofit
+import retrofit2.http.GET
+import retrofit2.http.Path
+import retrofit2.http.Query
 
 interface RickAndMortyApi {
     @GET("character")
-    suspend fun getCgaracters(
+    suspend fun getCharacters(
         @Query("name") name : String? = null
     ): CharacterResponse
 
