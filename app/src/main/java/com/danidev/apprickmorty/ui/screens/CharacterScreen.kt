@@ -1,6 +1,5 @@
 package com.danidev.apprickmorty.ui.screens
 
-import android.graphics.Color
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -36,7 +35,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.composed
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -46,11 +44,15 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.danidev.apprickmorty.data.model.RickCharacter
+import com.danidev.apprickmorty.ui.viewmodel.CharacterUiState
+import com.danidev.apprickmorty.ui.viewmodel.CharacterViewModel
+import androidx.compose.ui.tooling.preview.Preview
+import com.danidev.apprickmorty.data.model.Origin
 
 @Composable
 fun ComposableCharacterScreen(
     viewModel: CharacterViewModel = viewModel(),
-    onCharacterClick: (Int) -> Unit
+    onCharacterClick: (Int) -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
@@ -58,7 +60,7 @@ fun ComposableCharacterScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .statusBarsPadding()
+            .statusBarsPadding(),
     ) {
         OutlinedTextField(
             value = searchQuery,
@@ -76,7 +78,7 @@ fun ComposableCharacterScreen(
             shape = RoundedCornerShape(24.dp),
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp)
+                .padding(horizontal = 16.dp, vertical = 8.dp),
         )
 
         Box(modifier = Modifier.fillMaxSize()) {
@@ -85,28 +87,16 @@ fun ComposableCharacterScreen(
                     CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
                 }
                 is CharacterUiState.Success -> {
-                    LazyVerticalGrid(
-                        columns = GridCells.Fixed(2),
-                        contentPadding = PaddingValues(12.dp),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        items(
-                            items = state.characters,
-                            key = { item: RickCharacter -> item.id }
-                        ) { characterItem: RickCharacter ->
-                            CharacterCard(
-                                character = characterItem,
-                                onClick = { onCharacterClick(characterItem.id) }
-                            )
-                        }
-                    }
+                    CharacterGrid(
+                        characters = state.characters,
+                        onCharacterClick = onCharacterClick,
+                    )
                 }
                 is CharacterUiState.Error -> {
                     Text(
                         text = state.message,
                         modifier = Modifier.align(Alignment.Center),
-                        style = MaterialTheme.typography.bodyLarge
+                        style = MaterialTheme.typography.bodyLarge,
                     )
                 }
             }
@@ -115,15 +105,41 @@ fun ComposableCharacterScreen(
 }
 
 @Composable
+fun CharacterGrid(
+    characters: List<RickCharacter>,
+    onCharacterClick: (Int) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    LazyVerticalGrid(
+        columns = GridCells.Fixed(2),
+        contentPadding = PaddingValues(12.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+        modifier = modifier,
+    ) {
+        items(
+            items = characters,
+            key = { it.id },
+        ) { character ->
+            CharacterCard(
+                character = character,
+            ) {
+                onCharacterClick(character.id)
+            }
+        }
+    }
+}
+
+@Composable
 fun CharacterCard(
     character: RickCharacter,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     Card(
         onClick = onClick,
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
     ) {
         Column {
             AsyncImage(
@@ -132,14 +148,14 @@ fun CharacterCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(150.dp),
-                contentScale = ContentScale.Crop
+                contentScale = ContentScale.Crop,
             )
             Column(modifier = Modifier.padding(12.dp)) {
                 Text(
                     text = character.name,
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                     maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -152,16 +168,33 @@ fun CharacterCard(
                         modifier = Modifier
                             .size(8.dp)
                             .clip(CircleShape)
-                            .background(statusColor)
+                            .background(statusColor),
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
                         text = "${character.status} - ${character.species}",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun CharacterCardPreview() {
+    MaterialTheme {
+        CharacterCard(
+            character = RickCharacter(
+                id = 1,
+                name = "Rick Sanchez",
+                status = "Alive",
+                species = "Human",
+                image = "https://rickandmortyapi.com/api/character/avatar/1.jpeg",
+                origin = Origin("Earth"),
+            ),
+        ) { }
     }
 }
